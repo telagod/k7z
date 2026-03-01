@@ -1,0 +1,28 @@
+[package]
+name = "k7z-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+k7z-common = { path = "../crates/k7z-common" }
+
+[[bin]]
+name = "safe_join"
+path = "fuzz_targets/safe_join.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "detect_format"
+path = "fuzz_targets/detect_format.rs"
+test = false
+doc = false
+bench = false

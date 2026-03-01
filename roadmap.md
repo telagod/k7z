@@ -76,6 +76,13 @@ Progress:
   - overwrite semantics consistency audit
 - Add password handling tests (wrong password / empty password / header encryption)
 
+Progress:
+- Added initial `cargo-fuzz` scaffolding under `fuzz/`.
+- Added first targets:
+  - `safe_join` (path traversal guard robustness)
+  - `detect_format_from_path` (format parser robustness)
+- Added developer runbook for fuzzing in `README.md` and `fuzz/README.md`.
+
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
 - security checklist documented and passing

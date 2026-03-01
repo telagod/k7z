@@ -18,6 +18,16 @@ Current corpus scope:
 - system tool -> `k7z`: `7z`, `zip`, `tar`, `tar.zst`, `zst`
 - `k7z` -> system tool: `7z`, `zip`, `tar.zst`, `zst`
 
+## Fuzzing
+
+```bash
+cargo install cargo-fuzz --locked
+rustup toolchain install nightly --profile minimal
+cd fuzz
+cargo +nightly fuzz list
+cargo +nightly fuzz run safe_join -- -max_total_time=60
+```
+
 ## CLI
 
 ```bash
