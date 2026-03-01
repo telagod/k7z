@@ -25,6 +25,12 @@ Run one target for 60 seconds:
 cargo +nightly fuzz run safe_join -- -max_total_time=60
 ```
 
+Trigger remote fuzz with custom duration:
+
+```bash
+gh workflow run fuzz.yml -f max_total_time=180
+```
+
 ## Seed Corpus
 
 Initial seeds are versioned under `fuzz/corpus/<target>/`:
