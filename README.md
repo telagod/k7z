@@ -8,6 +8,16 @@
 cargo build --workspace
 ```
 
+## Compatibility Corpus
+
+```bash
+./scripts/compat-corpus.sh
+```
+
+Current corpus scope:
+- system tool -> `k7z`: `7z`, `zip`, `tar`, `tar.zst`, `zst`
+- `k7z` -> system tool: `zip`, `tar.zst`, `zst`
+
 ## CLI
 
 ```bash

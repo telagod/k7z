@@ -48,3 +48,23 @@ jobs:
           cargo run -q -p k7z-cli -- test "${workdir}/a.7z" -p secret
 
           cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip -n 2 --json > "${workdir}/bench.json"
+
+  compat-corpus:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install system archive tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends p7zip-full zip unzip zstd tar
+
+      - name: Run compatibility corpus
+        run: ./scripts/compat-corpus.sh

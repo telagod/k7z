@@ -60,6 +60,10 @@ Build `k7z` into a Linux-first mainstream archive tool with strong `7z + zstd` e
 - Add integration test suite under `tests/`
 - Add reproducible failure fixtures for regression tracking
 
+Progress:
+- Added `scripts/compat-corpus.sh` and CI `compat-corpus` job.
+- Current gap: `k7z -> system 7z` content parity is not enabled yet (tracked as TODO in corpus script).
+
 **Acceptance**
 - >= 95% corpus pass rate
 - no data corruption bugs in CI
