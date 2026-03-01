@@ -266,9 +266,18 @@ mod tests {
 
     #[test]
     fn archive_format_serializes_to_cli_style_strings() {
-        assert_eq!(serde_json::to_string(&ArchiveFormat::SevenZ).expect("serialize"), "\"7z\"");
-        assert_eq!(serde_json::to_string(&ArchiveFormat::Zip).expect("serialize"), "\"zip\"");
-        assert_eq!(serde_json::to_string(&ArchiveFormat::Tar).expect("serialize"), "\"tar\"");
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::SevenZ).expect("serialize"),
+            "\"7z\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::Zip).expect("serialize"),
+            "\"zip\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::Tar).expect("serialize"),
+            "\"tar\""
+        );
         assert_eq!(
             serde_json::to_string(&ArchiveFormat::TarGz).expect("serialize"),
             "\"tar.gz\""
@@ -281,7 +290,10 @@ mod tests {
             serde_json::to_string(&ArchiveFormat::TarZst).expect("serialize"),
             "\"tar.zst\""
         );
-        assert_eq!(serde_json::to_string(&ArchiveFormat::Zst).expect("serialize"), "\"zst\"");
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::Zst).expect("serialize"),
+            "\"zst\""
+        );
     }
 
     #[test]
