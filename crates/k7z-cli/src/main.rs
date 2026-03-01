@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use k7z_common::{
@@ -105,6 +105,17 @@ struct BenchArgs {
     solid: bool,
     #[arg(short = 'p', long = "password")]
     password: Option<String>,
+    #[arg(long = "json", default_value_t = false)]
+    json: bool,
+    #[arg(long = "out", value_name = "FILE")]
+    out: Option<PathBuf>,
+}
+
+#[derive(Debug, Default)]
+struct OutputFlags {
+    list_as_json: bool,
+    bench_as_json: bool,
+    bench_out: Option<PathBuf>,
 }
 
 fn main() -> miette::Result<()> {
@@ -116,13 +127,13 @@ fn main() -> miette::Result<()> {
         .init();
 
     let cli = Cli::parse();
-    let (request, list_as_json) = to_request(cli).map_err(|err| miette!(err.to_string()))?;
+    let (request, output_flags) = to_request(cli).map_err(|err| miette!(err.to_string()))?;
     let report = k7z_core::run(request).map_err(|err| miette!(err.to_string()))?;
-    print_report(&report, list_as_json).into_diagnostic()?;
+    print_report(&report, &output_flags).into_diagnostic()?;
     Ok(())
 }
 
-fn to_request(cli: Cli) -> Result<(TaskRequest, bool), K7zError> {
+fn to_request(cli: Cli) -> Result<(TaskRequest, OutputFlags), K7zError> {
     match cli.command {
         Commands::Pack(args) => {
             let format = if let Some(raw) = args.format {
@@ -145,7 +156,7 @@ fn to_request(cli: Cli) -> Result<(TaskRequest, bool), K7zError> {
                     solid: args.solid,
                     password: args.password,
                 }),
-                false,
+                OutputFlags::default(),
             ))
         }
         Commands::Unpack(args) => Ok((
@@ -155,21 +166,24 @@ fn to_request(cli: Cli) -> Result<(TaskRequest, bool), K7zError> {
                 overwrite: args.overwrite.into(),
                 password: args.password,
             }),
-            false,
+            OutputFlags::default(),
         )),
         Commands::List(args) => Ok((
             TaskRequest::List(ListRequest {
                 archive: args.archive,
                 password: args.password,
             }),
-            args.json,
+            OutputFlags {
+                list_as_json: args.json,
+                ..Default::default()
+            },
         )),
         Commands::Test(args) => Ok((
             TaskRequest::Test(TestRequest {
                 archive: args.archive,
                 password: args.password,
             }),
-            false,
+            OutputFlags::default(),
         )),
         Commands::Bench(args) => Ok((
             TaskRequest::Bench(BenchRequest {
@@ -180,12 +194,16 @@ fn to_request(cli: Cli) -> Result<(TaskRequest, bool), K7zError> {
                 solid: args.solid,
                 password: args.password,
             }),
-            false,
+            OutputFlags {
+                bench_as_json: args.json,
+                bench_out: args.out,
+                ..Default::default()
+            },
         )),
     }
 }
 
-fn print_report(report: &Report, list_as_json: bool) -> std::io::Result<()> {
+fn print_report(report: &Report, output_flags: &OutputFlags) -> std::io::Result<()> {
     match report {
         Report::Pack(data) => {
             println!(
@@ -205,7 +223,7 @@ fn print_report(report: &Report, list_as_json: bool) -> std::io::Result<()> {
             );
         }
         Report::List(data) => {
-            if list_as_json {
+            if output_flags.list_as_json {
                 println!(
                     "{}",
                     serde_json::to_string_pretty(data).expect("json serialization should work")
@@ -229,20 +247,57 @@ fn print_report(report: &Report, list_as_json: bool) -> std::io::Result<()> {
             println!("test passed: checked {} entries", data.entries_checked);
         }
         Report::Bench(data) => {
-            let ratio = if data.total_input_bytes == 0 {
-                0.0
+            if let Some(path) = &output_flags.bench_out {
+                write_json_file(path, data)?;
+            }
+            if output_flags.bench_as_json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(data).expect("json serialization should work")
+                );
             } else {
-                data.total_output_bytes as f64 / data.total_input_bytes as f64
-            };
-            println!(
-                "bench done: {} iterations, {} ms, {:.2} MiB/s, ratio {:.3}",
-                data.iterations, data.elapsed_ms, data.throughput_mib_s, ratio
-            );
-            println!(
-                "input {} bytes -> output {} bytes",
-                data.total_input_bytes, data.total_output_bytes
-            );
+                let ratio = if data.total_input_bytes == 0 {
+                    0.0
+                } else {
+                    data.total_output_bytes as f64 / data.total_input_bytes as f64
+                };
+                println!(
+                    "bench done: {} iterations, {} ms, {:.2} MiB/s, ratio {:.3}",
+                    data.iterations, data.elapsed_ms, data.throughput_mib_s, ratio
+                );
+                println!(
+                    "input {} bytes -> output {} bytes",
+                    data.total_input_bytes, data.total_output_bytes
+                );
+                if let Some(path) = &output_flags.bench_out {
+                    println!("bench report written to {}", path.display());
+                }
+            }
         }
     }
     Ok(())
+}
+
+fn write_json_file(path: &Path, value: &impl serde::Serialize) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)?;
+        }
+    }
+    let json = serde_json::to_string_pretty(value).expect("json serialization should work");
+    std::fs::write(path, json)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn write_json_file_creates_parent_dirs() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let output = dir.path().join("nested/report.json");
+        write_json_file(&output, &serde_json::json!({"ok": true})).expect("write");
+        let raw = std::fs::read_to_string(output).expect("read");
+        assert!(raw.contains("\"ok\": true"));
+    }
 }

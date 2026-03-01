@@ -481,7 +481,9 @@ dependencies = [
  "k7z-common",
  "k7z-core",
  "miette",
+ "serde",
  "serde_json",
+ "tempfile",
  "tracing",
  "tracing-subscriber",
 ]
