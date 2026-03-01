@@ -32,3 +32,19 @@ jobs:
 
       - name: Test
         run: cargo test --workspace
+
+      - name: Smoke CLI
+        run: |
+          set -euo pipefail
+          workdir="$(mktemp -d)"
+          mkdir -p "${workdir}/in"
+          printf 'hello\n' > "${workdir}/in/a.txt"
+
+          cargo run -q -p k7z-cli -- pack "${workdir}/in/a.txt" -o "${workdir}/a.zip"
+          cargo run -q -p k7z-cli -- test "${workdir}/a.zip"
+          cargo run -q -p k7z-cli -- unpack "${workdir}/a.zip" -o "${workdir}/out"
+
+          cargo run -q -p k7z-cli -- pack "${workdir}/in/a.txt" -o "${workdir}/a.7z" -p secret --solid
+          cargo run -q -p k7z-cli -- test "${workdir}/a.7z" -p secret
+
+          cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip -n 2 --json > "${workdir}/bench.json"
