@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload binaries
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          manifest-path: crates/k7z-cli/Cargo.toml
+          bin: k7z
+          target: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
