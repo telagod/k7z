@@ -49,10 +49,13 @@ jobs:
 
           cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip -n 2 --json > "${workdir}/bench.json"
           cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip --warmup 1 -n 2 --jsonl "${workdir}/bench.jsonl"
+          cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip --warmup 1 -n 2 --csv "${workdir}/bench.csv"
 
           test -s "${workdir}/bench.json"
           test -s "${workdir}/bench.jsonl"
+          test -s "${workdir}/bench.csv"
           grep -q '"format":"zip"' "${workdir}/bench.jsonl"
+          grep -q '^timestamp_unix_ms,format' "${workdir}/bench.csv"
 
   compat-corpus:
     runs-on: ubuntu-latest
