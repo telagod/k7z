@@ -200,7 +200,7 @@ fn unpack_from_reader<R: Read>(reader: R, req: &UnpackRequest) -> Result<UnpackR
     })
 }
 
-fn list_from_reader<R: Read>(reader: R) -> Result<ListReport> {
+pub fn list_from_reader<R: Read>(reader: R) -> Result<ListReport> {
     let mut archive = Archive::new(reader);
     let mut entries = Vec::new();
     for item in archive.entries()? {
@@ -230,4 +230,15 @@ fn test_from_reader<R: Read>(reader: R) -> Result<TestReport> {
         entries_checked += 1;
     }
     Ok(TestReport { entries_checked })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn list_from_reader_rejects_invalid_tar() {
+        let cursor = io::Cursor::new(b"not-a-tar".to_vec());
+        assert!(list_from_reader(cursor).is_err());
+    }
 }
