@@ -22,3 +22,11 @@ Run one target for 60 seconds:
 ```bash
 cargo +nightly fuzz run safe_join -- -max_total_time=60
 ```
+
+## Seed Corpus
+
+Initial seeds are versioned under `fuzz/corpus/<target>/`:
+
+- `fuzz/corpus/safe_join/`
+- `fuzz/corpus/detect_format/`
+- `fuzz/corpus/zip_list/`

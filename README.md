@@ -28,6 +28,8 @@ cargo +nightly fuzz list
 cargo +nightly fuzz run safe_join -- -max_total_time=60
 ```
 
+Seed corpus is tracked in `fuzz/corpus/<target>/`.
+
 ## CLI
 
 ```bash

@@ -1,0 +1,4 @@
+/path/to/file.7z
+/path/to/file.zip
+/path/to/file.tar.xz
+/path/to/file.zst
