@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use clap::{Parser, Subcommand, ValueEnum};
 use k7z_common::{
@@ -101,6 +102,8 @@ struct BenchArgs {
     level: Option<u32>,
     #[arg(long = "iterations", short = 'n', default_value_t = 3)]
     iterations: u32,
+    #[arg(long = "warmup", default_value_t = 0)]
+    warmup_iterations: u32,
     #[arg(long = "solid", default_value_t = false)]
     solid: bool,
     #[arg(short = 'p', long = "password")]
@@ -109,6 +112,8 @@ struct BenchArgs {
     json: bool,
     #[arg(long = "out", value_name = "FILE")]
     out: Option<PathBuf>,
+    #[arg(long = "csv", value_name = "FILE")]
+    csv: Option<PathBuf>,
 }
 
 #[derive(Debug, Default)]
@@ -116,6 +121,7 @@ struct OutputFlags {
     list_as_json: bool,
     bench_as_json: bool,
     bench_out: Option<PathBuf>,
+    bench_csv: Option<PathBuf>,
 }
 
 fn main() -> miette::Result<()> {
@@ -191,12 +197,14 @@ fn to_request(cli: Cli) -> Result<(TaskRequest, OutputFlags), K7zError> {
                 format: args.format,
                 level: args.level,
                 iterations: args.iterations,
+                warmup_iterations: args.warmup_iterations,
                 solid: args.solid,
                 password: args.password,
             }),
             OutputFlags {
                 bench_as_json: args.json,
                 bench_out: args.out,
+                bench_csv: args.csv,
                 ..Default::default()
             },
         )),
@@ -250,6 +258,9 @@ fn print_report(report: &Report, output_flags: &OutputFlags) -> std::io::Result<
             if let Some(path) = &output_flags.bench_out {
                 write_json_file(path, data)?;
             }
+            if let Some(path) = &output_flags.bench_csv {
+                append_bench_csv(path, data)?;
+            }
             if output_flags.bench_as_json {
                 println!(
                     "{}",
@@ -265,12 +276,18 @@ fn print_report(report: &Report, output_flags: &OutputFlags) -> std::io::Result<
                     "bench done: {} iterations, {} ms, {:.2} MiB/s, ratio {:.3}",
                     data.iterations, data.elapsed_ms, data.throughput_mib_s, ratio
                 );
+                if data.warmup_iterations > 0 {
+                    println!("warmup iterations: {}", data.warmup_iterations);
+                }
                 println!(
                     "input {} bytes -> output {} bytes",
                     data.total_input_bytes, data.total_output_bytes
                 );
                 if let Some(path) = &output_flags.bench_out {
                     println!("bench report written to {}", path.display());
+                }
+                if let Some(path) = &output_flags.bench_csv {
+                    println!("bench csv appended to {}", path.display());
                 }
             }
         }
@@ -288,6 +305,49 @@ fn write_json_file(path: &Path, value: &impl serde::Serialize) -> std::io::Resul
     std::fs::write(path, json)
 }
 
+fn append_bench_csv(path: &Path, data: &k7z_common::BenchReport) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)?;
+        }
+    }
+    let needs_header = !path.exists() || std::fs::metadata(path)?.len() == 0;
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+    if needs_header {
+        use std::io::Write as _;
+        file.write_all(
+            b"timestamp_unix_ms,format,iterations,warmup_iterations,total_input_bytes,total_output_bytes,elapsed_ms,throughput_mib_s,ratio\n",
+        )?;
+    }
+    let ratio = if data.total_input_bytes == 0 {
+        0.0
+    } else {
+        data.total_output_bytes as f64 / data.total_input_bytes as f64
+    };
+    let ts_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    use std::io::Write as _;
+    writeln!(
+        file,
+        "{},{},{},{},{},{},{},{:.6},{:.6}",
+        ts_ms,
+        data.format.as_str(),
+        data.iterations,
+        data.warmup_iterations,
+        data.total_input_bytes,
+        data.total_output_bytes,
+        data.elapsed_ms,
+        data.throughput_mib_s,
+        ratio
+    )?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -299,5 +359,26 @@ mod tests {
         write_json_file(&output, &serde_json::json!({"ok": true})).expect("write");
         let raw = std::fs::read_to_string(output).expect("read");
         assert!(raw.contains("\"ok\": true"));
+    }
+
+    #[test]
+    fn append_bench_csv_writes_header_once() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let output = dir.path().join("nested/report.csv");
+        let report = k7z_common::BenchReport {
+            format: ArchiveFormat::Zip,
+            iterations: 2,
+            warmup_iterations: 1,
+            total_input_bytes: 10,
+            total_output_bytes: 8,
+            elapsed_ms: 5,
+            throughput_mib_s: 1.5,
+        };
+        append_bench_csv(&output, &report).expect("csv1");
+        append_bench_csv(&output, &report).expect("csv2");
+        let raw = std::fs::read_to_string(output).expect("read");
+        let lines: Vec<_> = raw.lines().collect();
+        assert_eq!(lines.len(), 3);
+        assert!(lines[0].starts_with("timestamp_unix_ms,format"));
     }
 }

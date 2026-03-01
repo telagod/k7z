@@ -80,15 +80,39 @@ pub fn bench(req: BenchRequest) -> Result<BenchReport> {
     }
 
     let scratch = tempfile::tempdir()?;
+    run_bench_pack_loop(&req, &scratch.path().join("warmup"), req.warmup_iterations)?;
+
     let start = Instant::now();
+    let (total_input_bytes, total_output_bytes) =
+        run_bench_pack_loop(&req, &scratch.path().join("measure"), req.iterations)?;
+
+    let elapsed = start.elapsed();
+    let elapsed_ms = elapsed.as_millis().max(1);
+    let throughput_mib_s =
+        (total_input_bytes as f64 / (1024.0 * 1024.0)) / elapsed.as_secs_f64().max(0.001);
+
+    Ok(BenchReport {
+        format: req.format,
+        iterations: req.iterations,
+        warmup_iterations: req.warmup_iterations,
+        total_input_bytes,
+        total_output_bytes,
+        elapsed_ms,
+        throughput_mib_s,
+    })
+}
+
+fn run_bench_pack_loop(
+    req: &BenchRequest,
+    output_root: &std::path::Path,
+    iterations: u32,
+) -> Result<(u64, u64)> {
+    std::fs::create_dir_all(output_root)?;
     let mut total_input_bytes = 0_u64;
     let mut total_output_bytes = 0_u64;
-    for i in 0..req.iterations {
+    for i in 0..iterations {
         let archive_path =
-            scratch
-                .path()
-                .join(format!("bench-{}.{}", i + 1, extension_for(req.format)));
-
+            output_root.join(format!("bench-{}.{}", i + 1, extension_for(req.format)));
         let report = pack(PackRequest {
             sources: vec![req.source.clone()],
             output: archive_path,
@@ -100,19 +124,7 @@ pub fn bench(req: BenchRequest) -> Result<BenchReport> {
         total_input_bytes = total_input_bytes.saturating_add(report.bytes_in);
         total_output_bytes = total_output_bytes.saturating_add(report.bytes_out);
     }
-
-    let elapsed = start.elapsed();
-    let elapsed_ms = elapsed.as_millis().max(1);
-    let throughput_mib_s =
-        (total_input_bytes as f64 / (1024.0 * 1024.0)) / elapsed.as_secs_f64().max(0.001);
-
-    Ok(BenchReport {
-        iterations: req.iterations,
-        total_input_bytes,
-        total_output_bytes,
-        elapsed_ms,
-        throughput_mib_s,
-    })
+    Ok((total_input_bytes, total_output_bytes))
 }
 
 fn detect_archive_format(path: &std::path::Path) -> Result<ArchiveFormat> {
@@ -158,12 +170,15 @@ mod tests {
             format: ArchiveFormat::Zip,
             level: Some(6),
             iterations: 2,
+            warmup_iterations: 1,
             solid: false,
             password: None,
         })
         .expect("bench");
 
+        assert_eq!(report.format, ArchiveFormat::Zip);
         assert_eq!(report.iterations, 2);
+        assert_eq!(report.warmup_iterations, 1);
         assert!(report.total_input_bytes > 0);
         assert!(report.total_output_bytes > 0);
     }

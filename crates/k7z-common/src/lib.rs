@@ -123,6 +123,7 @@ pub struct BenchRequest {
     pub format: ArchiveFormat,
     pub level: Option<u32>,
     pub iterations: u32,
+    pub warmup_iterations: u32,
     pub solid: bool,
     pub password: Option<String>,
 }
@@ -163,7 +164,9 @@ pub struct TestReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchReport {
+    pub format: ArchiveFormat,
     pub iterations: u32,
+    pub warmup_iterations: u32,
     pub total_input_bytes: u64,
     pub total_output_bytes: u64,
     pub elapsed_ms: u128,
