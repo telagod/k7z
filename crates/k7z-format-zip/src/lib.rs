@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io;
+use std::io::{self, Read, Seek};
 use std::path::Path;
 
 use k7z_common::{
@@ -102,7 +102,11 @@ pub fn unpack(req: &UnpackRequest) -> Result<UnpackReport> {
 
 pub fn list(req: &k7z_common::ListRequest) -> Result<ListReport> {
     let input = File::open(&req.archive)?;
-    let mut archive = ZipArchive::new(input).map_err(zip_error)?;
+    list_from_reader(input)
+}
+
+pub fn list_from_reader<R: Read + Seek>(reader: R) -> Result<ListReport> {
+    let mut archive = ZipArchive::new(reader).map_err(zip_error)?;
 
     let mut entries = Vec::new();
     for i in 0..archive.len() {
@@ -197,5 +201,11 @@ mod tests {
         let file = PathBuf::from("/tmp/abc/def.txt");
         let name = normalize_name(&root, &file).expect("name");
         assert_eq!(name, "abc/def.txt");
+    }
+
+    #[test]
+    fn list_from_reader_rejects_invalid_zip() {
+        let cursor = io::Cursor::new(b"not-a-zip".to_vec());
+        assert!(list_from_reader(cursor).is_err());
     }
 }

@@ -6,6 +6,7 @@ This directory contains `cargo-fuzz` targets for parser and path-safety hardenin
 
 - `safe_join`: fuzz `k7z_common::safe_join` for path traversal and panic resistance
 - `detect_format`: fuzz `k7z_common::detect_format_from_path` for parser robustness
+- `zip_list`: fuzz `k7z_format_zip::list_from_reader` for ZIP parser robustness
 
 ## Quick Start
 

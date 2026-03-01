@@ -81,6 +81,7 @@ Progress:
 - Added first targets:
   - `safe_join` (path traversal guard robustness)
   - `detect_format_from_path` (format parser robustness)
+  - `zip_list` (ZIP parser robustness via `list_from_reader`)
 - Added developer runbook for fuzzing in `README.md` and `fuzz/README.md`.
 - Added `.github/workflows/fuzz.yml` (`workflow_dispatch` + weekly schedule) to run fuzz targets in CI.
 
