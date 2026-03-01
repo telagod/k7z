@@ -45,3 +45,12 @@ jobs:
         run: |
           cd fuzz
           cargo +nightly fuzz run "${{ matrix.target }}" -- -max_total_time=300
+
+      - name: Upload fuzz crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crash-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: fuzz/artifacts/${{ matrix.target }}
+          if-no-files-found: ignore
+          retention-days: 14

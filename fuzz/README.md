@@ -32,3 +32,21 @@ Initial seeds are versioned under `fuzz/corpus/<target>/`:
 - `fuzz/corpus/safe_join/`
 - `fuzz/corpus/detect_format/`
 - `fuzz/corpus/zip_list/`
+- `fuzz/corpus/tar_list/`
+- `fuzz/corpus/zstd_list/`
+
+## Crash Triage
+
+When CI reports a fuzz crash, download the artifact and replay locally:
+
+```bash
+cd fuzz
+RUST_BACKTRACE=1 cargo +nightly fuzz run <target> artifacts/<target>/<crash-file>
+```
+
+Minimize a crashing input:
+
+```bash
+cd fuzz
+cargo +nightly fuzz tmin <target> artifacts/<target>/<crash-file>
+```
