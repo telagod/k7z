@@ -48,6 +48,11 @@ jobs:
           cargo run -q -p k7z-cli -- test "${workdir}/a.7z" -p secret
 
           cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip -n 2 --json > "${workdir}/bench.json"
+          cargo run -q -p k7z-cli -- bench "${workdir}/in/a.txt" -f zip --warmup 1 -n 2 --jsonl "${workdir}/bench.jsonl"
+
+          test -s "${workdir}/bench.json"
+          test -s "${workdir}/bench.jsonl"
+          grep -q '"format":"zip"' "${workdir}/bench.jsonl"
 
   compat-corpus:
     runs-on: ubuntu-latest
