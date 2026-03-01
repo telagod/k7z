@@ -56,7 +56,7 @@ jobs:
           test -s "${workdir}/bench-out.json"
           test -s "${workdir}/bench.jsonl"
           test -s "${workdir}/bench.csv"
-          grep -q '"format": "Zip"' "${workdir}/bench-out.json"
+          grep -q '"format": "zip"' "${workdir}/bench-out.json"
           grep -q '"iterations": 2' "${workdir}/bench-out.json"
           grep -q '"warmup_iterations": 1' "${workdir}/bench-out.json"
           grep -q '"format":"zip"' "${workdir}/bench.jsonl"

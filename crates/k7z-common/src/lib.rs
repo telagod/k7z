@@ -24,12 +24,19 @@ pub enum K7zError {
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum ArchiveFormat {
+    #[serde(rename = "7z", alias = "SevenZ")]
     SevenZ,
+    #[serde(rename = "zip", alias = "Zip")]
     Zip,
+    #[serde(rename = "tar", alias = "Tar")]
     Tar,
+    #[serde(rename = "tar.gz", alias = "TarGz", alias = "tgz")]
     TarGz,
+    #[serde(rename = "tar.xz", alias = "TarXz", alias = "txz")]
     TarXz,
+    #[serde(rename = "tar.zst", alias = "TarZst", alias = "tzst")]
     TarZst,
+    #[serde(rename = "zst", alias = "Zst")]
     Zst,
 }
 
@@ -251,4 +258,49 @@ fn walk(root: &Path) -> Result<Vec<PathBuf>> {
         }
     }
     Ok(entries)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn archive_format_serializes_to_cli_style_strings() {
+        assert_eq!(serde_json::to_string(&ArchiveFormat::SevenZ).expect("serialize"), "\"7z\"");
+        assert_eq!(serde_json::to_string(&ArchiveFormat::Zip).expect("serialize"), "\"zip\"");
+        assert_eq!(serde_json::to_string(&ArchiveFormat::Tar).expect("serialize"), "\"tar\"");
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::TarGz).expect("serialize"),
+            "\"tar.gz\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::TarXz).expect("serialize"),
+            "\"tar.xz\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ArchiveFormat::TarZst).expect("serialize"),
+            "\"tar.zst\""
+        );
+        assert_eq!(serde_json::to_string(&ArchiveFormat::Zst).expect("serialize"), "\"zst\"");
+    }
+
+    #[test]
+    fn archive_format_deserializes_from_legacy_and_cli_strings() {
+        assert_eq!(
+            serde_json::from_str::<ArchiveFormat>("\"Zip\"").expect("deserialize"),
+            ArchiveFormat::Zip
+        );
+        assert_eq!(
+            serde_json::from_str::<ArchiveFormat>("\"zip\"").expect("deserialize"),
+            ArchiveFormat::Zip
+        );
+        assert_eq!(
+            serde_json::from_str::<ArchiveFormat>("\"TarGz\"").expect("deserialize"),
+            ArchiveFormat::TarGz
+        );
+        assert_eq!(
+            serde_json::from_str::<ArchiveFormat>("\"tar.gz\"").expect("deserialize"),
+            ArchiveFormat::TarGz
+        );
+    }
 }
