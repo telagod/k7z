@@ -14,6 +14,7 @@ libfuzzer-sys = "0.4"
 k7z-common = { path = "../crates/k7z-common" }
 k7z-format-tar = { path = "../crates/k7z-format-tar" }
 k7z-format-zip = { path = "../crates/k7z-format-zip" }
+k7z-format-zstd = { path = "../crates/k7z-format-zstd" }
 
 [[bin]]
 name = "safe_join"
@@ -39,6 +40,13 @@ bench = false
 [[bin]]
 name = "tar_list"
 path = "fuzz_targets/tar_list.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "zstd_list"
+path = "fuzz_targets/zstd_list.rs"
 test = false
 doc = false
 bench = false

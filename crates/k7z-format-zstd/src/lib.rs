@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io;
+use std::io::{self, Read};
 use std::path::PathBuf;
 
 use k7z_common::{
@@ -81,22 +81,38 @@ pub fn list(req: &k7z_common::ListRequest) -> Result<ListReport> {
         .map(|name| name.to_string_lossy().to_string())
         .unwrap_or_else(|| "stream".to_string());
 
-    let mut decoder = zstd::stream::Decoder::new(File::open(&req.archive)?)?;
+    list_from_reader(
+        File::open(&req.archive)?,
+        &name,
+        Some(req.archive.metadata()?.len()),
+    )
+}
+
+pub fn list_from_reader<R: Read>(
+    reader: R,
+    name: &str,
+    compressed_size: Option<u64>,
+) -> Result<ListReport> {
+    let mut decoder = zstd::stream::Decoder::new(reader)?;
     let mut sink = io::sink();
     let size = io::copy(&mut decoder, &mut sink)?;
 
     Ok(ListReport {
         entries: vec![EntryMetadata {
-            path: name,
+            path: name.to_string(),
             is_dir: false,
             size,
-            compressed_size: Some(req.archive.metadata()?.len()),
+            compressed_size,
         }],
     })
 }
 
 pub fn test(req: &TestRequest) -> Result<TestReport> {
-    let mut decoder = zstd::stream::Decoder::new(File::open(&req.archive)?)?;
+    test_from_reader(File::open(&req.archive)?)
+}
+
+pub fn test_from_reader<R: Read>(reader: R) -> Result<TestReport> {
+    let mut decoder = zstd::stream::Decoder::new(reader)?;
     let mut sink = io::sink();
     io::copy(&mut decoder, &mut sink)?;
     Ok(TestReport { entries_checked: 1 })
@@ -107,4 +123,15 @@ pub fn default_unpack_target(archive: &std::path::Path) -> Result<PathBuf> {
         .file_stem()
         .map(PathBuf::from)
         .ok_or_else(|| K7zError::InvalidInput(archive.display().to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn list_from_reader_rejects_invalid_zstd() {
+        let cursor = io::Cursor::new(b"not-a-zstd-stream".to_vec());
+        assert!(list_from_reader(cursor, "stream", None).is_err());
+    }
 }

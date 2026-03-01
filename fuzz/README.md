@@ -8,6 +8,7 @@ This directory contains `cargo-fuzz` targets for parser and path-safety hardenin
 - `detect_format`: fuzz `k7z_common::detect_format_from_path` for parser robustness
 - `zip_list`: fuzz `k7z_format_zip::list_from_reader` for ZIP parser robustness
 - `tar_list`: fuzz `k7z_format_tar::list_from_reader` for TAR parser robustness
+- `zstd_list`: fuzz `k7z_format_zstd::list_from_reader` for Zstd stream parser robustness
 
 ## Quick Start
 

@@ -20,6 +20,7 @@ jobs:
           - detect_format
           - zip_list
           - tar_list
+          - zstd_list
     steps:
       - name: Checkout
         uses: actions/checkout@v4
