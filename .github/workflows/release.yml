@@ -21,7 +21,7 @@ jobs:
         with:
           generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
 
       - name: Upload binaries
         uses: taiki-e/upload-rust-binary-action@v1
