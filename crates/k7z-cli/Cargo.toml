@@ -1,0 +1,19 @@
+[package]
+name = "k7z-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "k7z"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+k7z-common = { path = "../k7z-common" }
+k7z-core = { path = "../k7z-core" }
+miette.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

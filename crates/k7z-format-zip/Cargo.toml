@@ -1,0 +1,11 @@
+[package]
+name = "k7z-format-zip"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+k7z-common = { path = "../k7z-common" }
+walkdir.workspace = true
+zip = { version = "0.6.6", default-features = false, features = ["deflate"] }

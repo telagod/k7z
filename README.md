@@ -1,0 +1,47 @@
+# k7z
+
+`k7z` is a Rust-first archive tool focused on Linux workflows with strong `7z + zstd` support.
+
+## Build
+
+```bash
+cargo build --workspace
+```
+
+## CLI
+
+```bash
+# pack
+k7z pack ./data -o backup.7z --solid -p secret
+k7z pack ./data -o backup.tar.zst
+k7z pack ./file.bin -o file.bin.zst
+
+# unpack
+k7z unpack backup.7z -o ./restore -p secret
+
+# list / test
+k7z list backup.7z -p secret
+k7z list backup.zip --json
+k7z test backup.tar.zst
+
+# benchmark
+k7z bench ./data -f 7z -n 5 --level 9 --solid
+```
+
+7z-style aliases are included:
+
+- `k7z a ...` => `pack`
+- `k7z x ...` => `unpack`
+- `k7z l ...` => `list`
+- `k7z t ...` => `test`
+
+Benchmark command:
+
+- `k7z bench <source> -f <format> [-n iterations] [--level N] [--solid] [-p password]`
+
+## Current format support
+
+- `7z` (pack/unpack/list/test, password read/write)
+- `zip` (pack/unpack/list/test, no encryption in this version)
+- `tar`, `tar.gz`, `tar.xz`, `tar.zst` (pack/unpack/list/test)
+- `zst` single-file stream (pack/unpack/list/test)

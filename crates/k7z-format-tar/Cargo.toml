@@ -1,0 +1,13 @@
+[package]
+name = "k7z-format-tar"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+k7z-common = { path = "../k7z-common" }
+flate2 = "1.1.0"
+tar = "0.4.44"
+xz2 = "0.1.7"
+zstd = "0.13.3"

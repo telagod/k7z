@@ -1,0 +1,30 @@
+[workspace]
+members = [
+    "crates/k7z-cli",
+    "crates/k7z-common",
+    "crates/k7z-core",
+    "crates/k7z-crypto",
+    "crates/k7z-format-7z",
+    "crates/k7z-format-tar",
+    "crates/k7z-format-zip",
+    "crates/k7z-format-zstd",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+authors = ["k7z contributors"]
+rust-version = "1.85"
+
+[workspace.dependencies]
+clap = { version = "4.5.32", features = ["derive"] }
+miette = { version = "7.5.0", features = ["fancy"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
+walkdir = "2.5.0"
+zeroize = "1.8.1"

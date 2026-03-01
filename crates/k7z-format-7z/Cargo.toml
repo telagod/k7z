@@ -1,0 +1,11 @@
+[package]
+name = "k7z-format-7z"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+k7z-common = { path = "../k7z-common" }
+sevenz-rust2 = { version = "0.20.2", features = ["aes256", "compress", "util", "zstd", "deflate", "bzip2"] }
+walkdir.workspace = true
