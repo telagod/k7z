@@ -114,6 +114,8 @@ struct BenchArgs {
     out: Option<PathBuf>,
     #[arg(long = "csv", value_name = "FILE")]
     csv: Option<PathBuf>,
+    #[arg(long = "jsonl", value_name = "FILE")]
+    jsonl: Option<PathBuf>,
 }
 
 #[derive(Debug, Default)]
@@ -122,6 +124,7 @@ struct OutputFlags {
     bench_as_json: bool,
     bench_out: Option<PathBuf>,
     bench_csv: Option<PathBuf>,
+    bench_jsonl: Option<PathBuf>,
 }
 
 fn main() -> miette::Result<()> {
@@ -205,6 +208,7 @@ fn to_request(cli: Cli) -> Result<(TaskRequest, OutputFlags), K7zError> {
                 bench_as_json: args.json,
                 bench_out: args.out,
                 bench_csv: args.csv,
+                bench_jsonl: args.jsonl,
                 ..Default::default()
             },
         )),
@@ -261,6 +265,9 @@ fn print_report(report: &Report, output_flags: &OutputFlags) -> std::io::Result<
             if let Some(path) = &output_flags.bench_csv {
                 append_bench_csv(path, data)?;
             }
+            if let Some(path) = &output_flags.bench_jsonl {
+                append_bench_jsonl(path, data)?;
+            }
             if output_flags.bench_as_json {
                 println!(
                     "{}",
@@ -288,6 +295,9 @@ fn print_report(report: &Report, output_flags: &OutputFlags) -> std::io::Result<
                 }
                 if let Some(path) = &output_flags.bench_csv {
                     println!("bench csv appended to {}", path.display());
+                }
+                if let Some(path) = &output_flags.bench_jsonl {
+                    println!("bench jsonl appended to {}", path.display());
                 }
             }
         }
@@ -348,6 +358,45 @@ fn append_bench_csv(path: &Path, data: &k7z_common::BenchReport) -> std::io::Res
     Ok(())
 }
 
+fn append_bench_jsonl(path: &Path, data: &k7z_common::BenchReport) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)?;
+        }
+    }
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)?;
+    let ratio = if data.total_input_bytes == 0 {
+        0.0
+    } else {
+        data.total_output_bytes as f64 / data.total_input_bytes as f64
+    };
+    let ts_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let value = serde_json::json!({
+        "timestamp_unix_ms": ts_ms,
+        "format": data.format.as_str(),
+        "iterations": data.iterations,
+        "warmup_iterations": data.warmup_iterations,
+        "total_input_bytes": data.total_input_bytes,
+        "total_output_bytes": data.total_output_bytes,
+        "elapsed_ms": data.elapsed_ms,
+        "throughput_mib_s": data.throughput_mib_s,
+        "ratio": ratio
+    });
+    use std::io::Write as _;
+    writeln!(
+        file,
+        "{}",
+        serde_json::to_string(&value).expect("json serialization should work")
+    )?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -380,5 +429,26 @@ mod tests {
         let lines: Vec<_> = raw.lines().collect();
         assert_eq!(lines.len(), 3);
         assert!(lines[0].starts_with("timestamp_unix_ms,format"));
+    }
+
+    #[test]
+    fn append_bench_jsonl_appends_lines() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let output = dir.path().join("nested/report.jsonl");
+        let report = k7z_common::BenchReport {
+            format: ArchiveFormat::TarZst,
+            iterations: 2,
+            warmup_iterations: 1,
+            total_input_bytes: 10,
+            total_output_bytes: 8,
+            elapsed_ms: 5,
+            throughput_mib_s: 1.5,
+        };
+        append_bench_jsonl(&output, &report).expect("jsonl1");
+        append_bench_jsonl(&output, &report).expect("jsonl2");
+        let raw = std::fs::read_to_string(output).expect("read");
+        let lines: Vec<_> = raw.lines().collect();
+        assert_eq!(lines.len(), 2);
+        assert!(lines[0].contains("\"format\":\"tar.zst\""));
     }
 }

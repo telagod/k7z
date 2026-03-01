@@ -39,6 +39,7 @@ k7z bench ./data -f 7z -n 5 --level 9 --solid
 k7z bench ./data -f tar.zst --warmup 1 -n 3 --json
 k7z bench ./data -f zip -n 5 --out ./bench/zip-report.json
 k7z bench ./data -f zip -n 5 --csv ./bench/history.csv
+k7z bench ./data -f zip -n 5 --jsonl ./bench/history.jsonl
 ```
 
 7z-style aliases are included:
@@ -50,7 +51,7 @@ k7z bench ./data -f zip -n 5 --csv ./bench/history.csv
 
 Benchmark command:
 
-- `k7z bench <source> -f <format> [--warmup N] [-n iterations] [--level N] [--solid] [-p password] [--json] [--out file] [--csv file]`
+- `k7z bench <source> -f <format> [--warmup N] [-n iterations] [--level N] [--solid] [-p password] [--json] [--out file] [--csv file] [--jsonl file]`
 
 ## Current format support
 
