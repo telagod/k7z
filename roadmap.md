@@ -82,6 +82,7 @@ Progress:
   - `safe_join` (path traversal guard robustness)
   - `detect_format_from_path` (format parser robustness)
 - Added developer runbook for fuzzing in `README.md` and `fuzz/README.md`.
+- Added `.github/workflows/fuzz.yml` (`workflow_dispatch` + weekly schedule) to run fuzz targets in CI.
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
