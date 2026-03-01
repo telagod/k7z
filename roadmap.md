@@ -62,7 +62,7 @@ Build `k7z` into a Linux-first mainstream archive tool with strong `7z + zstd` e
 
 Progress:
 - Added `scripts/compat-corpus.sh` and CI `compat-corpus` job.
-- Current gap: `k7z -> system 7z` content parity is not enabled yet (tracked as TODO in corpus script).
+- `k7z -> system 7z` parity check is now enabled in corpus.
 
 **Acceptance**
 - >= 95% corpus pass rate

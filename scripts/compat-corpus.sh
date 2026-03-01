@@ -54,23 +54,21 @@ assert_dir_eq "${tmpdir}/system-src/tree" "${tmpdir}/out-system-tarzst/tree"
 assert_file_eq "${input_root}/single.txt" "${tmpdir}/out-system-zst/system-single.txt"
 
 echo "[compat] k7z -> system"
+run_k7z pack "${input_root}/tree" -o "${tmpdir}/k7z.7z"
 run_k7z pack "${input_root}/tree" -o "${tmpdir}/k7z.zip"
 run_k7z pack "${input_root}/tree" -o "${tmpdir}/k7z.tar.zst"
 run_k7z pack "${input_root}/single.txt" -o "${tmpdir}/k7z-single.txt.zst"
 
-mkdir -p "${tmpdir}/out-k7z-zip" "${tmpdir}/out-k7z-tarzst" "${tmpdir}/out-k7z-zst"
+mkdir -p "${tmpdir}/out-k7z-7z" "${tmpdir}/out-k7z-zip" "${tmpdir}/out-k7z-tarzst" "${tmpdir}/out-k7z-zst"
+7z x -y -bd "${tmpdir}/k7z.7z" "-o${tmpdir}/out-k7z-7z" >/dev/null
 unzip -q "${tmpdir}/k7z.zip" -d "${tmpdir}/out-k7z-zip"
 tar --zstd -xf "${tmpdir}/k7z.tar.zst" -C "${tmpdir}/out-k7z-tarzst"
 zstd -q -d -f "${tmpdir}/k7z-single.txt.zst" -o "${tmpdir}/out-k7z-zst/k7z-single.txt"
 
+# k7z 7z backend stores directory contents relative to source root.
+assert_dir_eq "${input_root}/tree" "${tmpdir}/out-k7z-7z"
 assert_dir_eq "${input_root}/tree" "${tmpdir}/out-k7z-zip/tree"
 assert_dir_eq "${input_root}/tree" "${tmpdir}/out-k7z-tarzst/tree"
 assert_file_eq "${input_root}/single.txt" "${tmpdir}/out-k7z-zst/k7z-single.txt"
-
-# TODO: enable once k7z->system 7z content parity is fixed.
-# run_k7z pack "${input_root}/tree" -o "${tmpdir}/k7z.7z"
-# mkdir -p "${tmpdir}/out-k7z-7z"
-# 7z x -y -bd "${tmpdir}/k7z.7z" "-o${tmpdir}/out-k7z-7z" >/dev/null
-# assert_dir_eq "${input_root}/tree" "${tmpdir}/out-k7z-7z/tree"
 
 echo "[compat] done"
