@@ -10,7 +10,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,11 +24,25 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
 
+  upload-binaries:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Upload binaries
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           manifest-path: crates/k7z-cli/Cargo.toml
           bin: k7z
-          target: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
+          target: ${{ matrix.target }}
           checksum: sha256
           token: ${{ secrets.GITHUB_TOKEN }}
