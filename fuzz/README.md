@@ -31,6 +31,14 @@ Trigger remote fuzz with custom duration:
 gh workflow run fuzz.yml -f max_total_time=180
 ```
 
+Equivalent Make aliases:
+
+```bash
+make fuzz-list
+make fuzz-run FUZZ_TARGET=tar_list FUZZ_SECONDS=60
+make fuzz-dispatch FUZZ_SECONDS=180
+```
+
 ## Seed Corpus
 
 Initial seeds are versioned under `fuzz/corpus/<target>/`:

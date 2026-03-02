@@ -30,6 +30,14 @@ cargo +nightly fuzz run safe_join -- -max_total_time=60
 
 Seed corpus is tracked in `fuzz/corpus/<target>/`.
 
+Common shortcuts:
+
+```bash
+make fuzz-list
+make fuzz-run FUZZ_TARGET=zip_list FUZZ_SECONDS=60
+make fuzz-dispatch FUZZ_SECONDS=180
+```
+
 Crash triage helper:
 
 ```bash

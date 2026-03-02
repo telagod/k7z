@@ -92,6 +92,7 @@ Progress:
 - Added configurable `workflow_dispatch` fuzz duration (`max_total_time`) for ad-hoc deeper runs.
 - Added `scripts/fuzz-triage.sh` to standardize replay/tmin/both crash triage actions.
 - Added CI smoke checks for `scripts/fuzz-triage.sh` (`--help` and invalid-target branch).
+- Added `Makefile` aliases for fuzz list/run/dispatch/triage workflows.
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
