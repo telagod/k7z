@@ -62,6 +62,18 @@ jobs:
           grep -q '"format":"zip"' "${workdir}/bench.jsonl"
           grep -q '^timestamp_unix_ms,format' "${workdir}/bench.csv"
 
+      - name: Smoke fuzz triage helper
+        run: |
+          set -euo pipefail
+          test -x ./scripts/fuzz-triage.sh
+          ./scripts/fuzz-triage.sh --help > /tmp/k7z-fuzz-triage-help.txt
+          grep -q '^Usage:' /tmp/k7z-fuzz-triage-help.txt
+          if ./scripts/fuzz-triage.sh replay no_such_target fuzz/corpus/zstd_list/sample.zst >/tmp/k7z-fuzz-triage-bad.log 2>&1; then
+            echo "expected failure for invalid target"
+            exit 1
+          fi
+          grep -q 'unknown fuzz target' /tmp/k7z-fuzz-triage-bad.log
+
   compat-corpus:
     runs-on: ubuntu-latest
     steps:
