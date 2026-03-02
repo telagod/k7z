@@ -86,6 +86,7 @@ jobs:
           grep -q 'make release-stable-dryrun' /tmp/k7z-make-help.txt
           grep -q 'make release-latest-run' /tmp/k7z-make-help.txt
           grep -q 'make release-show' /tmp/k7z-make-help.txt
+          grep -q 'make release-verify-assets' /tmp/k7z-make-help.txt
           grep -q 'make release-watch' /tmp/k7z-make-help.txt
           grep -q 'make release-start-rc' /tmp/k7z-make-help.txt
           grep -q 'make release-start-rc-dryrun' /tmp/k7z-make-help.txt

@@ -98,6 +98,7 @@ Progress:
 - Added release dry-run aliases: `release-rc-dryrun`, `release-stable-dryrun`.
 - Added `make release-latest-run` to quickly inspect the latest Release workflow status.
 - Added `make release-show` to inspect release metadata and uploaded asset sizes by tag.
+- Added `make release-verify-assets` to download release artifacts and validate uploaded `sha256` checksums.
 - Added `make release-watch` to wait and return the final status of the latest Release run.
 - Added one-shot release aliases: `release-start-rc`, `release-start-stable` (tag + watch).
 - Added dry-run one-shot aliases: `release-start-rc-dryrun`, `release-start-stable-dryrun`.

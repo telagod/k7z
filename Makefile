@@ -9,7 +9,7 @@ RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_TAG ?=
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-verify-assets release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
 
 help:
 	@printf '%s\n' \
@@ -28,6 +28,7 @@ help:
 	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>' \
 	  '  make release-latest-run' \
 	  '  make release-show [RELEASE_TAG=<vX.Y.Z> | RELEASE_VERSION=<x.y.z[-rc.N]>]' \
+	  '  make release-verify-assets [RELEASE_TAG=<vX.Y.Z> | RELEASE_VERSION=<x.y.z[-rc.N]>]' \
 	  '  make release-watch' \
 	  '  make release-start-rc     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-start-stable RELEASE_VERSION=<x.y.z>' \
@@ -164,6 +165,41 @@ release-show:
 	gh release view --repo telagod/k7z "$$tag" \
 	  --json assets \
 	  --jq '.assets[]? | "asset=\(.name) size=\(.size) bytes"'
+
+release-verify-assets:
+	@set -euo pipefail; \
+	tag="$(RELEASE_TAG)"; \
+	if [[ -z "$$tag" && -n "$(RELEASE_VERSION)" ]]; then \
+	  tag="v$(RELEASE_VERSION)"; \
+	fi; \
+	if [[ -z "$$tag" ]]; then \
+	  echo "missing RELEASE_TAG (or set RELEASE_VERSION)" >&2; \
+	  exit 2; \
+	fi; \
+	if [[ "$$tag" != v* ]]; then \
+	  tag="v$$tag"; \
+	fi; \
+	command -v sha256sum >/dev/null || { echo "sha256sum not found" >&2; exit 1; }; \
+	tmpdir="$$(mktemp -d)"; \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	gh release download --repo telagod/k7z "$$tag" \
+	  --pattern '*.tar.gz' \
+	  --pattern '*.sha256' \
+	  --dir "$$tmpdir"; \
+	if ! compgen -G "$$tmpdir/*.sha256" >/dev/null; then \
+	  echo "[release] no .sha256 assets found for $$tag" >&2; \
+	  exit 1; \
+	fi; \
+	if ! compgen -G "$$tmpdir/*.tar.gz" >/dev/null; then \
+	  echo "[release] no .tar.gz assets found for $$tag" >&2; \
+	  exit 1; \
+	fi; \
+	count=0; \
+	for checksum in "$$tmpdir"/*.sha256; do \
+	  (cd "$$tmpdir" && sha256sum -c "$$(basename "$$checksum")"); \
+	  count=$$((count + 1)); \
+	done; \
+	echo "[release] verified $$count checksum file(s) for $$tag"
 
 release-watch:
 	@run_id="$$(gh run list --repo telagod/k7z --workflow Release --limit 1 \
