@@ -46,13 +46,17 @@ Initial seeds are versioned under `fuzz/corpus/<target>/`:
 When CI reports a fuzz crash, download the artifact and replay locally:
 
 ```bash
-cd fuzz
-RUST_BACKTRACE=1 cargo +nightly fuzz run <target> artifacts/<target>/<crash-file>
+./scripts/fuzz-triage.sh replay <target> artifacts/<target>/<crash-file>
 ```
 
 Minimize a crashing input:
 
 ```bash
-cd fuzz
-cargo +nightly fuzz tmin <target> artifacts/<target>/<crash-file>
+./scripts/fuzz-triage.sh tmin <target> artifacts/<target>/<crash-file>
+```
+
+Run both steps in one command:
+
+```bash
+./scripts/fuzz-triage.sh both <target> artifacts/<target>/<crash-file>
 ```

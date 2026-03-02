@@ -30,6 +30,12 @@ cargo +nightly fuzz run safe_join -- -max_total_time=60
 
 Seed corpus is tracked in `fuzz/corpus/<target>/`.
 
+Crash triage helper:
+
+```bash
+./scripts/fuzz-triage.sh replay zip_list fuzz/artifacts/zip_list/<crash-file>
+```
+
 ## CLI
 
 ```bash

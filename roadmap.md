@@ -90,6 +90,7 @@ Progress:
 - Fuzz runtime is now tiered: `workflow_dispatch` smoke (60s) and scheduled nightly run (300s).
 - Added CI crash artifact upload (`fuzz/artifacts/<target>`) and local triage runbook.
 - Added configurable `workflow_dispatch` fuzz duration (`max_total_time`) for ad-hoc deeper runs.
+- Added `scripts/fuzz-triage.sh` to standardize replay/tmin/both crash triage actions.
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
