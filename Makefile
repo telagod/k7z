@@ -8,7 +8,7 @@ FUZZ_SECONDS ?= 60
 RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run
 
 help:
 	@printf '%s\n' \
@@ -24,7 +24,8 @@ help:
 	  '  make release-rc     RELEASE_VERSION=<x.y.z-rc.N> [RELEASE_REMOTE=origin]' \
 	  '  make release-stable RELEASE_VERSION=<x.y.z> [RELEASE_REMOTE=origin]' \
 	  '  make release-rc-dryrun     RELEASE_VERSION=<x.y.z-rc.N>' \
-	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>'
+	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>' \
+	  '  make release-latest-run'
 
 fuzz-list:
 	cd fuzz && cargo +nightly fuzz list
@@ -126,3 +127,13 @@ release-stable-dryrun:
 	fi
 	@$(MAKE) release-check RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
 	@echo "[release-dryrun] would create and push tag v$(RELEASE_VERSION) to $(RELEASE_REMOTE)"
+
+release-latest-run:
+	@run="$$(gh run list --repo telagod/k7z --workflow Release --limit 1 \
+	  --json databaseId,status,conclusion,event,headSha,url,createdAt,updatedAt \
+	  --jq 'if length == 0 then "" else "id=\(.[0].databaseId) status=\(.[0].status) conclusion=\((.[0].conclusion // "n/a")) event=\(.[0].event) sha=\(.[0].headSha[0:7]) url=\(.[0].url)" end')"; \
+	if [[ -z "$$run" ]]; then \
+	  echo "[release] no workflow runs found"; \
+	else \
+	  echo "$$run"; \
+	fi

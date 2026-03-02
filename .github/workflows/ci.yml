@@ -84,6 +84,7 @@ jobs:
           grep -q 'make release-rc' /tmp/k7z-make-help.txt
           grep -q 'make release-rc-dryrun' /tmp/k7z-make-help.txt
           grep -q 'make release-stable-dryrun' /tmp/k7z-make-help.txt
+          grep -q 'make release-latest-run' /tmp/k7z-make-help.txt
 
   compat-corpus:
     runs-on: ubuntu-latest

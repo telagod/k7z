@@ -39,6 +39,7 @@ make fuzz-run FUZZ_TARGET=tar_list FUZZ_SECONDS=60
 make fuzz-dispatch FUZZ_SECONDS=180
 make release-check RELEASE_VERSION=0.1.0-rc.3
 make release-rc-dryrun RELEASE_VERSION=0.1.0-rc.3
+make release-latest-run
 ```
 
 ## Seed Corpus
