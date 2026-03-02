@@ -95,6 +95,7 @@ Progress:
 - Added `Makefile` aliases for fuzz list/run/dispatch/triage workflows.
 - Added CI smoke checks for `Makefile` fuzz aliases (`make help` contract).
 - Added `Makefile` release aliases with safety checks: `release-check`, `release-rc`, `release-stable`.
+- Added release dry-run aliases: `release-rc-dryrun`, `release-stable-dryrun`.
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers

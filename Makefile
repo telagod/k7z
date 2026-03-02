@@ -8,7 +8,7 @@ FUZZ_SECONDS ?= 60
 RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun
 
 help:
 	@printf '%s\n' \
@@ -22,7 +22,9 @@ help:
 	  '  make fuzz-triage-both   FUZZ_TARGET=<target> FUZZ_INPUT=<path>' \
 	  '  make release-check  RELEASE_VERSION=<x.y.z[-rc.N]>' \
 	  '  make release-rc     RELEASE_VERSION=<x.y.z-rc.N> [RELEASE_REMOTE=origin]' \
-	  '  make release-stable RELEASE_VERSION=<x.y.z> [RELEASE_REMOTE=origin]'
+	  '  make release-stable RELEASE_VERSION=<x.y.z> [RELEASE_REMOTE=origin]' \
+	  '  make release-rc-dryrun     RELEASE_VERSION=<x.y.z-rc.N>' \
+	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>'
 
 fuzz-list:
 	cd fuzz && cargo +nightly fuzz list
@@ -106,3 +108,21 @@ release-stable:
 	git tag -a "$$tag" -m "Release $$tag"; \
 	git push "$(RELEASE_REMOTE)" "$$tag"; \
 	echo "[release] pushed $$tag to $(RELEASE_REMOTE)"
+
+release-rc-dryrun:
+	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
+	@if [[ "$(RELEASE_VERSION)" != *-* ]]; then \
+	  echo "release-rc-dryrun requires prerelease version (example: 0.1.0-rc.3)" >&2; \
+	  exit 2; \
+	fi
+	@$(MAKE) release-check RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
+	@echo "[release-dryrun] would create and push tag v$(RELEASE_VERSION) to $(RELEASE_REMOTE)"
+
+release-stable-dryrun:
+	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
+	@if [[ "$(RELEASE_VERSION)" == *-* ]]; then \
+	  echo "release-stable-dryrun requires stable version (example: 0.1.0)" >&2; \
+	  exit 2; \
+	fi
+	@$(MAKE) release-check RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
+	@echo "[release-dryrun] would create and push tag v$(RELEASE_VERSION) to $(RELEASE_REMOTE)"
