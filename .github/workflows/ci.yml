@@ -80,6 +80,8 @@ jobs:
           make help > /tmp/k7z-make-help.txt
           grep -q 'make fuzz-list' /tmp/k7z-make-help.txt
           grep -q 'make fuzz-triage-both' /tmp/k7z-make-help.txt
+          grep -q 'make release-check' /tmp/k7z-make-help.txt
+          grep -q 'make release-rc' /tmp/k7z-make-help.txt
 
   compat-corpus:
     runs-on: ubuntu-latest

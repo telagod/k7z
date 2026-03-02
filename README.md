@@ -36,6 +36,9 @@ Common shortcuts:
 make fuzz-list
 make fuzz-run FUZZ_TARGET=zip_list FUZZ_SECONDS=60
 make fuzz-dispatch FUZZ_SECONDS=180
+make release-check RELEASE_VERSION=0.1.0-rc.3
+make release-rc RELEASE_VERSION=0.1.0-rc.3
+make release-stable RELEASE_VERSION=0.1.0
 ```
 
 Crash triage helper:

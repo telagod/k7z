@@ -94,6 +94,7 @@ Progress:
 - Added CI smoke checks for `scripts/fuzz-triage.sh` (`--help` and invalid-target branch).
 - Added `Makefile` aliases for fuzz list/run/dispatch/triage workflows.
 - Added CI smoke checks for `Makefile` fuzz aliases (`make help` contract).
+- Added `Makefile` release aliases with safety checks: `release-check`, `release-rc`, `release-stable`.
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
