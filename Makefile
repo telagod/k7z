@@ -8,7 +8,7 @@ FUZZ_SECONDS ?= 60
 RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-watch
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-watch release-start-rc release-start-stable
 
 help:
 	@printf '%s\n' \
@@ -26,7 +26,9 @@ help:
 	  '  make release-rc-dryrun     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>' \
 	  '  make release-latest-run' \
-	  '  make release-watch'
+	  '  make release-watch' \
+	  '  make release-start-rc     RELEASE_VERSION=<x.y.z-rc.N>' \
+	  '  make release-start-stable RELEASE_VERSION=<x.y.z>'
 
 fuzz-list:
 	cd fuzz && cargo +nightly fuzz list
@@ -151,3 +153,13 @@ release-watch:
 	gh run view --repo telagod/k7z "$$run_id" \
 	  --json databaseId,status,conclusion,event,headSha,url \
 	  --jq '"id=\(.databaseId) status=\(.status) conclusion=\((.conclusion // "n/a")) event=\(.event) sha=\(.headSha[0:7]) url=\(.url)"'
+
+release-start-rc:
+	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
+	@$(MAKE) release-rc RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
+	@$(MAKE) release-watch
+
+release-start-stable:
+	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
+	@$(MAKE) release-stable RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
+	@$(MAKE) release-watch

@@ -98,6 +98,7 @@ Progress:
 - Added release dry-run aliases: `release-rc-dryrun`, `release-stable-dryrun`.
 - Added `make release-latest-run` to quickly inspect the latest Release workflow status.
 - Added `make release-watch` to wait and return the final status of the latest Release run.
+- Added one-shot release aliases: `release-start-rc`, `release-start-stable` (tag + watch).
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
