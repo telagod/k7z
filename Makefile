@@ -7,8 +7,9 @@ FUZZ_INPUT ?=
 FUZZ_SECONDS ?= 60
 RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
+RELEASE_TAG ?=
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
 
 help:
 	@printf '%s\n' \
@@ -26,6 +27,7 @@ help:
 	  '  make release-rc-dryrun     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>' \
 	  '  make release-latest-run' \
+	  '  make release-show [RELEASE_TAG=<vX.Y.Z> | RELEASE_VERSION=<x.y.z[-rc.N]>]' \
 	  '  make release-watch' \
 	  '  make release-start-rc     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-start-stable RELEASE_VERSION=<x.y.z>' \
@@ -142,6 +144,26 @@ release-latest-run:
 	else \
 	  echo "$$run"; \
 	fi
+
+release-show:
+	@set -euo pipefail; \
+	tag="$(RELEASE_TAG)"; \
+	if [[ -z "$$tag" && -n "$(RELEASE_VERSION)" ]]; then \
+	  tag="v$(RELEASE_VERSION)"; \
+	fi; \
+	if [[ -z "$$tag" ]]; then \
+	  echo "missing RELEASE_TAG (or set RELEASE_VERSION)" >&2; \
+	  exit 2; \
+	fi; \
+	if [[ "$$tag" != v* ]]; then \
+	  tag="v$$tag"; \
+	fi; \
+	gh release view --repo telagod/k7z "$$tag" \
+	  --json tagName,isPrerelease,publishedAt,url,assets \
+	  --jq '"tag=\(.tagName) prerelease=\(.isPrerelease) published=\(.publishedAt) assets=\(.assets|length) url=\(.url)"'; \
+	gh release view --repo telagod/k7z "$$tag" \
+	  --json assets \
+	  --jq '.assets[]? | "asset=\(.name) size=\(.size) bytes"'
 
 release-watch:
 	@run_id="$$(gh run list --repo telagod/k7z --workflow Release --limit 1 \

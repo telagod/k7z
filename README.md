@@ -42,6 +42,7 @@ make release-rc RELEASE_VERSION=0.1.0-rc.3
 make release-stable-dryrun RELEASE_VERSION=0.1.0
 make release-stable RELEASE_VERSION=0.1.0
 make release-latest-run
+make release-show RELEASE_VERSION=0.1.0-rc.2
 make release-watch
 make release-start-rc RELEASE_VERSION=0.1.0-rc.4
 make release-start-stable RELEASE_VERSION=0.1.0
