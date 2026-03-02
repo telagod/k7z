@@ -97,6 +97,7 @@ Progress:
 - Added `Makefile` release aliases with safety checks: `release-check`, `release-rc`, `release-stable`.
 - Added release dry-run aliases: `release-rc-dryrun`, `release-stable-dryrun`.
 - Added `make release-latest-run` to quickly inspect the latest Release workflow status.
+- Added `make release-watch` to wait and return the final status of the latest Release run.
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers

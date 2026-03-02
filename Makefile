@@ -8,7 +8,7 @@ FUZZ_SECONDS ?= 60
 RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-watch
 
 help:
 	@printf '%s\n' \
@@ -25,7 +25,8 @@ help:
 	  '  make release-stable RELEASE_VERSION=<x.y.z> [RELEASE_REMOTE=origin]' \
 	  '  make release-rc-dryrun     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-stable-dryrun RELEASE_VERSION=<x.y.z>' \
-	  '  make release-latest-run'
+	  '  make release-latest-run' \
+	  '  make release-watch'
 
 fuzz-list:
 	cd fuzz && cargo +nightly fuzz list
@@ -137,3 +138,16 @@ release-latest-run:
 	else \
 	  echo "$$run"; \
 	fi
+
+release-watch:
+	@run_id="$$(gh run list --repo telagod/k7z --workflow Release --limit 1 \
+	  --json databaseId --jq 'if length == 0 then "" else .[0].databaseId end')"; \
+	if [[ -z "$$run_id" ]]; then \
+	  echo "[release] no workflow runs found"; \
+	  exit 1; \
+	fi; \
+	echo "[release] watching run $$run_id"; \
+	gh run watch --repo telagod/k7z --exit-status "$$run_id"; \
+	gh run view --repo telagod/k7z "$$run_id" \
+	  --json databaseId,status,conclusion,event,headSha,url \
+	  --jq '"id=\(.databaseId) status=\(.status) conclusion=\((.conclusion // "n/a")) event=\(.event) sha=\(.headSha[0:7]) url=\(.url)"'
