@@ -74,6 +74,13 @@ jobs:
           fi
           grep -q 'unknown fuzz target' /tmp/k7z-fuzz-triage-bad.log
 
+      - name: Smoke Makefile aliases
+        run: |
+          set -euo pipefail
+          make help > /tmp/k7z-make-help.txt
+          grep -q 'make fuzz-list' /tmp/k7z-make-help.txt
+          grep -q 'make fuzz-triage-both' /tmp/k7z-make-help.txt
+
   compat-corpus:
     runs-on: ubuntu-latest
     steps:

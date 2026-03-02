@@ -93,6 +93,7 @@ Progress:
 - Added `scripts/fuzz-triage.sh` to standardize replay/tmin/both crash triage actions.
 - Added CI smoke checks for `scripts/fuzz-triage.sh` (`--help` and invalid-target branch).
 - Added `Makefile` aliases for fuzz list/run/dispatch/triage workflows.
+- Added CI smoke checks for `Makefile` fuzz aliases (`make help` contract).
 
 **Acceptance**
 - fuzz jobs run in CI with no known crashers
