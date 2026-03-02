@@ -46,6 +46,7 @@ make release-promote-check RELEASE_VERSION=0.1.0-rc.2
 make release-watch
 make release-start-rc RELEASE_VERSION=0.1.0-rc.4
 make release-start-rc-dryrun RELEASE_VERSION=0.1.0-rc.4
+make release-start-rc-verified RELEASE_VERSION=0.1.0-rc.4
 ```
 
 ## Seed Corpus

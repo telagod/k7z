@@ -50,6 +50,8 @@ make release-start-rc RELEASE_VERSION=0.1.0-rc.4
 make release-start-stable RELEASE_VERSION=0.1.0
 make release-start-rc-dryrun RELEASE_VERSION=0.1.0-rc.4
 make release-start-stable-dryrun RELEASE_VERSION=0.1.0
+make release-start-rc-verified RELEASE_VERSION=0.1.0-rc.4
+make release-start-stable-verified RELEASE_VERSION=0.1.0
 ```
 
 Crash triage helper:

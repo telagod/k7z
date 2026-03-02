@@ -10,7 +10,7 @@ RELEASE_REMOTE ?= origin
 RELEASE_TAG ?=
 EXPECT_PRERELEASE ?= auto
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-verify-assets release-promote-check release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-verify-assets release-promote-check release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun release-start-rc-verified release-start-stable-verified
 
 help:
 	@printf '%s\n' \
@@ -35,7 +35,9 @@ help:
 	  '  make release-start-rc     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-start-stable RELEASE_VERSION=<x.y.z>' \
 	  '  make release-start-rc-dryrun     RELEASE_VERSION=<x.y.z-rc.N>' \
-	  '  make release-start-stable-dryrun RELEASE_VERSION=<x.y.z>'
+	  '  make release-start-stable-dryrun RELEASE_VERSION=<x.y.z>' \
+	  '  make release-start-rc-verified     RELEASE_VERSION=<x.y.z-rc.N>' \
+	  '  make release-start-stable-verified RELEASE_VERSION=<x.y.z>'
 
 fuzz-list:
 	cd fuzz && cargo +nightly fuzz list
@@ -281,3 +283,17 @@ release-start-stable-dryrun:
 	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
 	@$(MAKE) release-stable-dryrun RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
 	@$(MAKE) release-latest-run
+
+release-start-rc-verified:
+	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
+	@$(MAKE) release-rc RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
+	@$(MAKE) release-watch
+	@$(MAKE) release-verify-assets RELEASE_VERSION="$(RELEASE_VERSION)"
+	@$(MAKE) release-promote-check RELEASE_VERSION="$(RELEASE_VERSION)" EXPECT_PRERELEASE=true
+
+release-start-stable-verified:
+	@test -n "$(RELEASE_VERSION)" || (echo "missing RELEASE_VERSION" >&2; exit 2)
+	@$(MAKE) release-stable RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_REMOTE="$(RELEASE_REMOTE)"
+	@$(MAKE) release-watch
+	@$(MAKE) release-verify-assets RELEASE_VERSION="$(RELEASE_VERSION)"
+	@$(MAKE) release-promote-check RELEASE_VERSION="$(RELEASE_VERSION)" EXPECT_PRERELEASE=false
