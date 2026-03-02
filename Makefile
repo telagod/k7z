@@ -8,8 +8,9 @@ FUZZ_SECONDS ?= 60
 RELEASE_VERSION ?=
 RELEASE_REMOTE ?= origin
 RELEASE_TAG ?=
+EXPECT_PRERELEASE ?= auto
 
-.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-verify-assets release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
+.PHONY: help fuzz-list fuzz-run fuzz-smoke-all fuzz-dispatch fuzz-triage-replay fuzz-triage-tmin fuzz-triage-both release-check release-rc release-stable release-rc-dryrun release-stable-dryrun release-latest-run release-show release-verify-assets release-promote-check release-watch release-start-rc release-start-stable release-start-rc-dryrun release-start-stable-dryrun
 
 help:
 	@printf '%s\n' \
@@ -29,6 +30,7 @@ help:
 	  '  make release-latest-run' \
 	  '  make release-show [RELEASE_TAG=<vX.Y.Z> | RELEASE_VERSION=<x.y.z[-rc.N]>]' \
 	  '  make release-verify-assets [RELEASE_TAG=<vX.Y.Z> | RELEASE_VERSION=<x.y.z[-rc.N]>]' \
+	  '  make release-promote-check [RELEASE_TAG=<vX.Y.Z> | RELEASE_VERSION=<x.y.z[-rc.N]>] [EXPECT_PRERELEASE=auto|true|false]' \
 	  '  make release-watch' \
 	  '  make release-start-rc     RELEASE_VERSION=<x.y.z-rc.N>' \
 	  '  make release-start-stable RELEASE_VERSION=<x.y.z>' \
@@ -200,6 +202,52 @@ release-verify-assets:
 	  count=$$((count + 1)); \
 	done; \
 	echo "[release] verified $$count checksum file(s) for $$tag"
+
+release-promote-check:
+	@set -euo pipefail; \
+	tag="$(RELEASE_TAG)"; \
+	if [[ -z "$$tag" && -n "$(RELEASE_VERSION)" ]]; then \
+	  tag="v$(RELEASE_VERSION)"; \
+	fi; \
+	if [[ -z "$$tag" ]]; then \
+	  echo "missing RELEASE_TAG (or set RELEASE_VERSION)" >&2; \
+	  exit 2; \
+	fi; \
+	if [[ "$$tag" != v* ]]; then \
+	  tag="v$$tag"; \
+	fi; \
+	expect="$(EXPECT_PRERELEASE)"; \
+	if [[ -z "$$expect" || "$$expect" == "auto" ]]; then \
+	  if [[ "$$tag" == *-* ]]; then \
+	    expect="true"; \
+	  else \
+	    expect="false"; \
+	  fi; \
+	fi; \
+	if [[ "$$expect" != "true" && "$$expect" != "false" ]]; then \
+	  echo "EXPECT_PRERELEASE must be auto|true|false" >&2; \
+	  exit 2; \
+	fi; \
+	actual="$$(gh release view --repo telagod/k7z "$$tag" --json isPrerelease --jq '.isPrerelease')"; \
+	if [[ "$$actual" != "$$expect" ]]; then \
+	  echo "[release] prerelease mismatch for $$tag: expect=$$expect actual=$$actual" >&2; \
+	  exit 1; \
+	fi; \
+	required_assets=( \
+	  "k7z-x86_64-unknown-linux-gnu.tar.gz" \
+	  "k7z-x86_64-unknown-linux-gnu.sha256" \
+	  "k7z-aarch64-unknown-linux-gnu.tar.gz" \
+	  "k7z-aarch64-unknown-linux-gnu.sha256" \
+	); \
+	for asset in "$${required_assets[@]}"; do \
+	  count="$$(gh release view --repo telagod/k7z "$$tag" --json assets --jq '[.assets[] | select(.name=="'"$$asset"'")] | length')"; \
+	  if [[ "$$count" -ne 1 ]]; then \
+	    echo "[release] missing or duplicated asset for $$tag: $$asset (count=$$count)" >&2; \
+	    exit 1; \
+	  fi; \
+	done; \
+	total="$$(gh release view --repo telagod/k7z "$$tag" --json assets --jq '.assets | length')"; \
+	echo "[release] promote-check passed for $$tag prerelease=$$actual required_assets=4 total_assets=$$total"
 
 release-watch:
 	@run_id="$$(gh run list --repo telagod/k7z --workflow Release --limit 1 \
